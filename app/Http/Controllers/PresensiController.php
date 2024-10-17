@@ -12,6 +12,68 @@ class PresensiController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+    public function getHadir()
+    {
+        // Mendapatkan awal bulan dan akhir bulan ini
+        $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
+        $endOfMonth = Carbon::now()->endOfMonth()->toDateString();
+
+        $presensi = Presensi::where('keterangan', 'hadir')
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+            ->get();
+
+        return response()->json(['data' => $presensi]);
+    }
+
+    public function getTelat()
+    {
+        $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
+        $endOfMonth = Carbon::now()->endOfMonth()->toDateString();
+
+        $presensi = Presensi::where('keterangan', 'telat')
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+            ->get();
+        // Mendapatkan awal bulan dan akhir bulan ini
+        return response()->json(['data' => $presensi]);
+    }
+
+    public function getPresensiWeekly()
+    {
+        // Mendapatkan siswa_id dari user yang login
+        $siswa_id = Auth::user()->siswa_id;
+
+        // Mendapatkan awal minggu (misalnya hari Senin) dan akhir minggu (hari Minggu)
+        $startOfWeek = Carbon::now()->startOfWeek()->toDateString();
+        $endOfWeek = Carbon::now()->endOfWeek()->toDateString();
+
+        // Mengambil data presensi dalam rentang waktu satu minggu
+        $presensi = Presensi::where('siswa_id', $siswa_id)
+            ->whereBetween('tanggal', [$startOfWeek, $endOfWeek])
+            ->get();
+
+        // Mengembalikan hasil dalam format JSON
+        return response()->json($presensi);
+    }
+
+    public function getPresensiMonthly()
+    {
+        // Mendapatkan siswa_id dari user yang login
+        $siswa_id = Auth::user()->siswa_id;
+
+        // Mendapatkan awal bulan dan akhir bulan ini
+        $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
+        $endOfMonth = Carbon::now()->endOfMonth()->toDateString();
+
+        // Mengambil data presensi dalam rentang waktu satu bulan
+        $presensi = Presensi::where('siswa_id', $siswa_id)
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+            ->get();
+
+        // Mengembalikan hasil dalam format JSON
+        return response()->json($presensi);
+    }
+
     public function presensi()
     {
         $siswa_id = Auth::user()->siswa_id;
@@ -27,7 +89,7 @@ class PresensiController extends Controller
             ->first();
 
         if ($absen) {
-        // Jika sudah absen dan ingin absen pulang
+            // Jika sudah absen dan ingin absen pulang
             if ($absen->waktu_datang !== null) {
                 if ($absen->waktu_pulang) {
                     return response()->json(['message' => 'Anda sudah absen pulang hari ini.'], 422);
