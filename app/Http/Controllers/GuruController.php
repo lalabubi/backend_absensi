@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Guru;
+use App\Models\Presensi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class GuruController extends Controller
@@ -11,7 +13,32 @@ class GuruController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+
+     public function getKehadiran(Request $request)
+     {
+         // Ambil guru_id dari user yang sedang login
+         $guruId = Auth::user()->guru_id;
+     
+         // Dapatkan kelas dari tabel guru berdasarkan guru_id
+         $kelas = Guru::where('id', $guruId)->value('kelas');
+     
+         // Tentukan rentang tanggal untuk satu minggu terakhir
+         $tanggalMulai = now()->subDays(6)->startOfDay();
+         $tanggalAkhir = now()->endOfDay();
+     
+         // Ambil data presensi berdasarkan kelas dan rentang tanggal
+         $data = Presensi::join('siswa', 'presensi.siswa_id', '=', 'siswa.id')
+                         ->where('siswa.kelas', $kelas)
+                         ->whereBetween('presensi.tanggal', [$tanggalMulai, $tanggalAkhir])
+                         ->select('presensi.*', 'siswa.nama', 'siswa.kelas')
+                         ->get();
+     
+         return response()->json([
+             'data' => $data
+         ]);
+     }
+
+     public function index()
     {
         $data = Guru::all();
         return response()->json(['data' => $data]);
